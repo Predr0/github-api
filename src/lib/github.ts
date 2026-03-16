@@ -1,4 +1,4 @@
-// 1. Definição do contrato de dados (Interfaces)
+
 export interface GitHubUser {
   login: string;
   avatar_url: string;
@@ -19,10 +19,8 @@ export interface GitHubRepo {
   language: string;
 }
 
-// 2. Função para buscar o perfil do usuário
 export async function getGitHubUser(username: string): Promise<GitHubUser> {
   const response = await fetch(`https://api.github.com/users/${username}`, {
-    // Revalida os dados a cada 1 hora (Cache do Next.js)
     next: { revalidate: 3600 } 
   });
 
@@ -33,7 +31,6 @@ export async function getGitHubUser(username: string): Promise<GitHubUser> {
   return response.json();
 }
 
-// 3. Função para buscar os repositórios do usuário
 export async function getGitHubRepos(username: string): Promise<GitHubRepo[]> {
   const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`, {
     next: { revalidate: 3600 }
@@ -44,4 +41,33 @@ export async function getGitHubRepos(username: string): Promise<GitHubRepo[]> {
   }
 
   return response.json();
+}
+
+export async function getLanguagesData(username: string) {
+  const repos = await getGitHubRepos(username);
+  
+  const languagesMap: Record<string, number> = {};
+
+  await Promise.all(
+    repos.map(async (repo) => {
+      const res = await fetch(`https://api.github.com/repos/${username}/${repo.name}/languages`, {
+        next: { revalidate: 3600 }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        Object.keys(data).forEach((lang) => {
+          languagesMap[lang] = (languagesMap[lang] || 0) + data[lang];
+        });
+      }
+    })
+  );
+
+ 
+  const totalBytes = Object.values(languagesMap).reduce((a, b) => a + b, 0);
+  
+  return Object.keys(languagesMap).map((name) => ({
+    name,
+    value: languagesMap[name],
+    percentage: ((languagesMap[name] / totalBytes) * 100).toFixed(1)
+  })).sort((a, b) => b.value - a.value).slice(0, 5); 
 }
