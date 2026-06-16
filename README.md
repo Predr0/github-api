@@ -16,7 +16,7 @@ O projeto foi construído utilizando as tecnologias mais quentes e modernas do e
 
 ---
 
-## 💡 Diferenciais Técnicos & Arquitetura (Para Recrutadores)
+## 💡 Diferenciais Técnicos & Arquitetura 
 
 Este projeto foi desenhado seguindo as melhores práticas de engenharia de software, focado em performance, resiliência e experiência do usuário (UX):
 
